@@ -13,5 +13,6 @@ namespace GabrielLocadora.Models.Interfaces
         bool Add(Locacao estudante);
         void Remove(int id);
         bool Update(Locacao estudante);
+        bool Devolucao(int id);
     }
 }

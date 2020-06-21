@@ -63,5 +63,20 @@ namespace GabrielLocadora.Controllers
         {
             return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Não é permitido excluir fisicamente um registro");
         }
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("Devolucao")]
+        public HttpResponseMessage Devolucao(int id)
+        {
+            var locacao = LocacaoRepositorio.Get(id);
+            if(locacao == null)
+                return Request.CreateErrorResponse(HttpStatusCode.NotFound, "Locação não localizada para o Id informado");
+
+            var result = LocacaoRepositorio.Devolucao(locacao.Id);
+            if (result)
+                return Request.CreateResponse(HttpStatusCode.OK, "Devolução efetuada dentro do Prazo");
+            else
+                return Request.CreateResponse(HttpStatusCode.OK, "Devolução efetuada fora do Prazo");
+        }
     }
 }

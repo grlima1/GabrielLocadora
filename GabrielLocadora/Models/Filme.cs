@@ -11,7 +11,16 @@ namespace GabrielLocadora.Models
         public string nome { get; set; }
         public Categoria categoria { get; set; }
         public int ano_lancamento { get; set; }
-        public bool disponivel { get; set; }
+        private bool disponivel { get; set; }
+
+        public bool isAvailable()
+        {
+            return disponivel;
+        }
+        public void rent()
+        {
+            disponivel = false;
+        }
 
         public Filme()
         {

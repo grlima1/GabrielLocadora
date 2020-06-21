@@ -9,15 +9,17 @@ namespace GabrielLocadora.Models
     public class LocacaoRepositorio : ILocacaoRepositorio
     {
         private List<Locacao> Locacoes = new List<Locacao>();
+        private IEnumerable<Filme> Filmes = new List<Filme>();
+        private IEnumerable<Cliente> Clientes = new List<Cliente>();
         private int _nextId = 1;
         public LocacaoRepositorio()
         {
-            var clientes = new ClienteRepositorio().GetAll();
-            var filmes = new FilmeRepositorio().GetAll();
-            Add(new Locacao { Id = 1, cliente = clientes.ElementAt(0), filme = filmes.ElementAt(0), dtLocacao = DateTime.Today });
-            Add(new Locacao { Id = 2, cliente = clientes.ElementAt(1), filme = filmes.ElementAt(1), dtLocacao = DateTime.Today });
-            Add(new Locacao { Id = 3, cliente = clientes.ElementAt(2), filme = filmes.ElementAt(2), dtLocacao = DateTime.Today });
-            Add(new Locacao { Id = 4, cliente = clientes.ElementAt(3), filme = filmes.ElementAt(3), dtLocacao = DateTime.Today.AddDays(-3), dtDevolucaoPrevista = DateTime.Today, dtDevolucaoReal = DateTime.Today.AddDays(1) });
+            Clientes = new ClienteRepositorio().GetAll();
+            Filmes = new FilmeRepositorio().GetAll();
+            Add(new Locacao { Id = 1, cliente = Clientes.ElementAt(0), filme = Filmes.ElementAt(0), dtLocacao = DateTime.Today });
+            Add(new Locacao { Id = 2, cliente = Clientes.ElementAt(3), filme = Filmes.ElementAt(3), dtLocacao = DateTime.Today.AddDays(-5) });
+            foreach (var loc in Locacoes)
+                RentMovie(loc);
         }
         public IEnumerable<Locacao> GetLocacaoNaoFinalizada()
         {
@@ -44,6 +46,19 @@ namespace GabrielLocadora.Models
 
             return result;
         }
+        //regra 3: Não permitir alugar um filme que não está disponível
+        private bool isMovieAvailable(Filme filme)
+        {
+            foreach (var mov in Filmes)
+                if (mov.nome == filme.nome)
+                    return mov.isAvailable();
+            return false; //retorna falso também se filme não existe
+        }
+        private void RentMovie(Locacao locacao)
+        {
+            Filmes.Where(x => x.nome == locacao.filme.nome).First().rent();
+            locacao.dtDevolucaoPrevista = locacao.dtLocacao.AddDays(3);
+        }
         public bool Add(Locacao Locacao)
         {
             bool addResult = false;
@@ -53,9 +68,10 @@ namespace GabrielLocadora.Models
             }
             int index = Locacoes.FindIndex(s => s.Id == Locacao.Id);
 
-            if (index == -1 && isPossibleToRent(Locacao))
+            if (index == -1 && isPossibleToRent(Locacao) && isMovieAvailable(Locacao.filme))
             {
                 Locacoes.Add(Locacao);
+                RentMovie(Locacao);
                 addResult = true;
                 return addResult;
             }
@@ -82,6 +98,15 @@ namespace GabrielLocadora.Models
             }
             Locacoes.RemoveAt(index);
             Locacoes.Add(Locacao);
+            return true;
+        }
+        //regra 4: Alertar na devolução se o filme está com atraso
+        public bool Devolucao(int id)
+        {
+            var locacao = Locacoes.Where(x => x.Id == id).FirstOrDefault();
+            locacao.dtDevolucaoReal = DateTime.Now;
+            if (locacao.dtDevolucaoPrevista.Value.CompareTo(DateTime.Now) <  0)
+                return false;
             return true;
         }
     }
