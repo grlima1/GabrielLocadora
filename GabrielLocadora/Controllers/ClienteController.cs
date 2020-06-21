@@ -58,8 +58,7 @@ namespace GabrielLocadora.Controllers
         }
         public HttpResponseMessage DeleteCliente(int id)
         {
-            ClienteRepositorio.Remove(id);
-            return new HttpResponseMessage(HttpStatusCode.NoContent);
+            return Request.CreateErrorResponse(HttpStatusCode.BadRequest, "Não é permitido excluir fisicamente um registro");
         }
     }
 }
